@@ -36,6 +36,7 @@ BuildRequires:	aspell-en
 BuildRequires:	enchant-aspell
 %endif
 %if %{with doc}
+BuildRequires:	python3-pyenchant
 BuildRequires:	sphinx-pdg >= 2.0.0
 %endif
 Requires:	python3-modules >= 1:3.5
