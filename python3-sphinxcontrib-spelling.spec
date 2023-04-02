@@ -1,45 +1,50 @@
 #
 # Conditional build:
 %bcond_without	doc	# Sphinx documentation
-%bcond_without	tests	# unit tests
+%bcond_with	tests	# unit tests (requires package already installed and en_US dictionary available via pyenchant)
 
 Summary:	Sphinx spell checking extension
 Summary(pl.UTF-8):	Rozszerzenie Sphinksa do sprawdzania pisowni
 Name:		python3-sphinxcontrib-spelling
-Version:	5.0.0
-Release:	5
+Version:	8.0.0
+Release:	1
 License:	BSD
 Group:		Libraries/Python
 #Source0Download: https://pypi.org/simple/sphinxcontrib-spelling/
 Source0:	https://files.pythonhosted.org/packages/source/s/sphinxcontrib-spelling/sphinxcontrib-spelling-%{version}.tar.gz
-# Source0-md5:	48a3197bd3bf3c4ebc407433263b5cd5
+# Source0-md5:	f1ff5b879a09b95297bbb55fd9c93c78
 URL:		https://pypi.org/project/sphinxcontrib-spelling/
-BuildRequires:	python3-modules >= 1:3.5
-BuildRequires:	python3-pbr
-BuildRequires:	python3-setuptools
+BuildRequires:	python3-modules >= 1:3.7
+BuildRequires:	python3-setuptools >= 1:61
+BuildRequires:	python3-setuptools_scm >= 6.2
+BuildRequires:	python3-toml
 %if %{with tests}
-BuildRequires:	python3-Sphinx >= 2.0.0
+BuildRequires:	python3-Sphinx >= 3.0.0
 BuildRequires:	python3-fixtures >= 3.0.0
-BuildRequires:	python3-pyenchant >= 1.6.5
+%if "%{py3_ver}" == "3.7"
+BuildRequires:	python3-importlib_metadata >= 1.7.0
+%endif
+BuildRequires:	python3-pyenchant >= 3.1.1
 BuildRequires:	python3-pytest
-BuildRequires:	python3-six
-BuildRequires:	python3-subunit >= 0.0.18
-BuildRequires:	python3-testrepository >= 0.0.18
-BuildRequires:	python3-testscenarios >= 0.4
-BuildRequires:	python3-testtools >= 1.4.0
+BuildRequires:	python3-sphinxcontrib-spelling
 %endif
 BuildRequires:	rpm-pythonprov
 BuildRequires:	rpmbuild(macros) >= 1.714
 %if %{with doc} || %{with tests}
 # en_US dict for enchant
 BuildRequires:	aspell-en
+%if 0%(rpm -q enchant2 >/dev/null 2>&1 ; echo $?)
 BuildRequires:	enchant-aspell
+%else
+BuildRequires:	enchant2-aspell
+%endif
 %endif
 %if %{with doc}
-BuildRequires:	python3-pyenchant
-BuildRequires:	sphinx-pdg >= 2.0.0
+BuildRequires:	python3-pyenchant >= 3.1.1
+BuildRequires:	python3-sphinxcontrib-spelling
+BuildRequires:	sphinx-pdg >= 3.0.0
 %endif
-Requires:	python3-modules >= 1:3.5
+Requires:	python3-modules >= 1:3.7
 Requires:	python3-sphinxcontrib
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -68,8 +73,19 @@ Dokumentacja API modułu Pythona sphinxcontrib-spelling.
 %prep
 %setup -q -n sphinxcontrib-spelling-%{version}
 
+cat >setup.py <<EOF
+from setuptools import setup
+setup()
+EOF
+
 %build
-%py3_build %{?with_tests:test}
+%py3_build
+
+%if %{with tests}
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+PYTHONPATH=$(pwd) \
+%{__python3} -m pytest tests
+%endif
 
 %if %{with doc}
 # enable spell checking to additionally verify particular
@@ -89,10 +105,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS ChangeLog LICENSE README
+%doc AUTHORS LICENSE README
 %{py3_sitescriptdir}/sphinxcontrib/spelling
 %{py3_sitescriptdir}/sphinxcontrib_spelling-%{version}-py*.egg-info
-%{py3_sitescriptdir}/sphinxcontrib_spelling-%{version}-py*-nspkg.pth
 
 %if %{with doc}
 %files apidocs
