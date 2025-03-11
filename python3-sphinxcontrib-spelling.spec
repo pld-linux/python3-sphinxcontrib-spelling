@@ -7,7 +7,7 @@ Summary:	Sphinx spell checking extension
 Summary(pl.UTF-8):	Rozszerzenie Sphinksa do sprawdzania pisowni
 Name:		python3-sphinxcontrib-spelling
 Version:	8.0.0
-Release:	2
+Release:	3
 License:	BSD
 Group:		Libraries/Python
 #Source0Download: https://pypi.org/simple/sphinxcontrib-spelling/
